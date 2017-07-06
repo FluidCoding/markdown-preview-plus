@@ -556,7 +556,7 @@ class MarkdownPreviewView extends ScrollView
     tokens      = markdownIt.getTokens text, @renderLaTeX
     pathToToken = @getPathToToken tokens, line
 
-    element = @find('.update-prevgiew').eq(0)
+    element = @find('.update-preview').eq(0)
     for token in pathToToken
       candidateElement = element.children(token.tag).eq(token.index)
       if candidateElement.length isnt 0
