@@ -40,6 +40,11 @@ module.exports =
         'text.plain.null-grammar'
       ]
       order: 30
+    autoSaveHTML:
+      title: 'Enable Automatic Saving of Preview as HTML'
+      type: 'boolean'
+      default: false
+      order: 35
     enableLatexRenderingByDefault:
       title: 'Enable Math Rendering By Default'
       type: 'boolean'

@@ -26,7 +26,6 @@ class MarkdownPreviewView extends ScrollView
     @emitter = new Emitter
     @disposables = new CompositeDisposable
     @loaded = true # Do not show the loading spinnor on initial load
-
   attached: ->
     return if @isAttached
     @isAttached = true
@@ -92,7 +91,7 @@ class MarkdownPreviewView extends ScrollView
   handleEvents: ->
     @disposables.add atom.grammars.onDidAddGrammar => _.debounce((=> @renderMarkdown()), 250)
     @disposables.add atom.grammars.onDidUpdateGrammar _.debounce((=> @renderMarkdown()), 250)
-
+    # @disposables.add atom.workspace.getActivePane().onWillSave => @saveAs()
     atom.commands.add @element,
       'core:move-up': =>
         @scrollUp()
@@ -130,7 +129,8 @@ class MarkdownPreviewView extends ScrollView
       @disposables.add @editor.getBuffer().onDidStopChanging ->
         changeHandler() if atom.config.get 'markdown-preview-plus.liveUpdate'
       @disposables.add @editor.onDidChangePath => @emitter.emit 'did-change-title'
-      @disposables.add @editor.getBuffer().onDidSave ->
+      @disposables.add @editor.getBuffer().onDidSave =>
+        @saveAs() if atom.config.get 'markdown-preview-plus.autoSaveHTML'
         changeHandler() unless atom.config.get 'markdown-preview-plus.liveUpdate'
       @disposables.add @editor.getBuffer().onDidReload ->
         changeHandler() unless atom.config.get 'markdown-preview-plus.liveUpdate'
@@ -297,9 +297,8 @@ class MarkdownPreviewView extends ScrollView
 
     true
 
-  saveAs: ->
+  saveAs: =>
     return if @loading
-
     filePath = @getPath()
     title = 'Markdown to HTML'
     if filePath
@@ -309,9 +308,11 @@ class MarkdownPreviewView extends ScrollView
       filePath = 'untitled.md.html'
       if projectPath = atom.project.getPaths()[0]
         filePath = path.join(projectPath, filePath)
-
-    if htmlFilePath = atom.showSaveDialogSync(filePath)
-
+    if atom.config.get 'markdown-preview-plus.autoSaveHTML'
+      htmlFilePath = filePath
+    else
+      htmlFilePath = atom.showSaveDialogSync(filePath)
+    if htmlFilePath
       @getHTML (error, htmlBody) =>
         if error?
           console.warn('Saving Markdown as HTML failed', error)
@@ -346,7 +347,7 @@ class MarkdownPreviewView extends ScrollView
             </html>""" + "\n" # Ensure trailing newline
 
           fs.writeFileSync(htmlFilePath, html)
-          atom.workspace.open(htmlFilePath)
+         atom.workspace.open(htmlFilePath) unless atom.config.get 'markdown-preview-plus.autoSaveHTML'
 
   isEqual: (other) ->
     @[0] is other?[0] # Compare DOM elements
@@ -555,7 +556,7 @@ class MarkdownPreviewView extends ScrollView
     tokens      = markdownIt.getTokens text, @renderLaTeX
     pathToToken = @getPathToToken tokens, line
 
-    element = @find('.update-preview').eq(0)
+    element = @find('.update-prevgiew').eq(0)
     for token in pathToToken
       candidateElement = element.children(token.tag).eq(token.index)
       if candidateElement.length isnt 0
