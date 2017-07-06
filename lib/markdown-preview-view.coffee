@@ -91,7 +91,6 @@ class MarkdownPreviewView extends ScrollView
   handleEvents: ->
     @disposables.add atom.grammars.onDidAddGrammar => _.debounce((=> @renderMarkdown()), 250)
     @disposables.add atom.grammars.onDidUpdateGrammar _.debounce((=> @renderMarkdown()), 250)
-    # @disposables.add atom.workspace.getActivePane().onWillSave => @saveAs()
     atom.commands.add @element,
       'core:move-up': =>
         @scrollUp()
